@@ -14,3 +14,19 @@ module "compute" {
   public_subnet_id  = module.network.public_subnet_ids[0] 
   private_subnet_id = module.network.private_subnet_ids[0]
 }
+
+# استدعاء موديول قواعد البيانات
+module "database" {
+  source             = "./modules/database"
+  environment        = var.environment
+  vpc_id             = module.network.vpc_id
+  private_subnet_ids = module.network.private_subnet_ids
+  app_sg_id          = module.compute.app_sg_id # تأكد أن موديول الـ compute يُخرج هذا الـ ID في ملف outputs.tf الخاص به
+}
+
+# استدعاء موديول الإشعارات
+module "notifications" {
+  source           = "./modules/notifications"
+  email_address    = "alaaelgazwy525@gmail.com" 
+  state_bucket_arn = "arn:aws:s3:::backend011s3"
+}
