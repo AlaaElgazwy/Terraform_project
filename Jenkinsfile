@@ -48,8 +48,13 @@ stage('Deploy Application') {
     when { expression { params.ACTION == 'apply' } }
     steps {
         sshagent(['my-aws-key']) {
-            // Ansible الآن سيقرأ ملف inventory.ini الذي كتبه Terraform بنفسه
-            sh "ansible-playbook -i inventory.ini deploy_app.yml -vvv"
+           sh """
+                    echo "Waiting 60 seconds for EC2 instances to fully boot and start SSH..."
+                    sleep 60
+                    
+                    echo "Starting Ansible Deployment..."
+                    ansible-playbook -i inventory.ini deploy_app.yml -vvvv
+                    """
         }
     }
 }
