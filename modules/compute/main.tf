@@ -43,6 +43,7 @@ resource "aws_security_group" "app_sg" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
+    security_groups = [module.compute.bastion_sg_id]
   }
 
   ingress {
