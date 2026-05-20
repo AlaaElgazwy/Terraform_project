@@ -1,0 +1,54 @@
+---
+- name: Deploy Node.js App on Private EC2
+  hosts: app_servers
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install Node.js, npm, and git
+      apt:
+        name:
+          - nodejs
+          - npm
+          - git
+        state: present
+
+    - name: Install PM2 globally (Process Manager to keep app running)
+      npm:
+        name: pm2
+        global: yes
+
+    - name: Ensure app directory exists
+      file:
+        path: /var/www/node-app
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Clone the Node.js application from GitHub
+      git:
+        repo: 'https://github.com/AlaaElgazwy/node-aws-app.git'
+        dest: /var/www/node-app
+        version: main
+        force: yes
+
+    - name: Install application dependencies
+      npm:
+        path: /var/www/node-app
+
+    - name: Stop existing PM2 process if running
+      command: pm2 stop backend-app
+      ignore_errors: yes
+      args:
+        chdir: /var/www/node-app
+
+    - name: Start the application with PM2
+      command: pm2 start index.js --name "backend-app"
+      args:
+        chdir: /var/www/node-app
+      environment:
+        DB_HOST: "{{ rds_endpoint }}"
+        REDIS_HOST: "{{ redis_endpoint }}"
+        PORT: "3000"
