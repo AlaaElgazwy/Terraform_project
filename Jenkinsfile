@@ -48,13 +48,8 @@ stage('Deploy Application') {
     when { expression { params.ACTION == 'apply' } }
     steps {
         sshagent(['my-aws-key']) {
-            sh """
-            # -A تعني Forwarding للـ Agent. الـ SSH الآن سيستخدم المفتاح الموجود في الـ Agent
-            ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${module.compute.bastion_public_ip} "ssh -A -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${module.compute.application_private_ip} 'echo Connection Successful'"
-            
-            # نفس الشيء بالنسبة لـ Ansible
-            ansible-playbook -i inventory.ini deploy_app.yml
-            """
+            // Ansible الآن سيقرأ ملف inventory.ini الذي كتبه Terraform بنفسه
+            sh "ansible-playbook -i inventory.ini deploy_app.yml -vvv"
         }
     }
 }

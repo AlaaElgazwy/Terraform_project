@@ -38,6 +38,7 @@ ${module.compute.application_private_ip}
 
 [app_servers:vars]
 ansible_user=ubuntu
+# هنا نستخدم الـ ProxyJump مع الـ IP الذي استخرجه Terraform فعلياً
 ansible_ssh_common_args='-o ProxyJump=ubuntu@${module.compute.bastion_public_ip} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 EOF
 }
