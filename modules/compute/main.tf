@@ -67,6 +67,7 @@ resource "aws_instance" "bastion" {
   instance_type          = "t3.micro"
   subnet_id              = var.public_subnet_id
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
+  key_name      = "my-aws-key"
 
   tags = {
     Name = "${var.environment}-Bastion-EC2"
@@ -84,6 +85,7 @@ resource "aws_instance" "application" {
   instance_type          = "t3.micro"
   subnet_id              = var.private_subnet_id
   vpc_security_group_ids = [aws_security_group.app_sg.id]
+  key_name      = "my-aws-key"
 
   tags = {
     Name = "${var.environment}-App-EC2"
