@@ -43,5 +43,16 @@ pipeline {
                 sh "terraform ${params.ACTION} -var-file=${params.ENVIRONMENT}.tfvars -auto-approve"
             }
         }
+
+        stage('Deploy Application') {
+        when { expression { params.ACTION == 'apply' } }
+        steps {
+            
+            sshagent(['my-aws-key']) {
+                sh "ansible-playbook -i inventory.ini deploy_app.yml"
+            }
+        }
+    }
+    
     }
 }

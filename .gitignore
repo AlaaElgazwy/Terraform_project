@@ -5,3 +5,6 @@
 *.tfstate.*
 crash.log
 crash.*.log
+my-aws-key
+my-aws-key.pub
+inventory.ini
