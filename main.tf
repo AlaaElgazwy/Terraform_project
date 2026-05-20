@@ -38,9 +38,7 @@ ${module.compute.application_private_ip}
 
 [app_servers:vars]
 ansible_user=ubuntu
-# بنقول لـ Ansible: استخدم الـ ProxyJump مع المفتاح الصريح، وابعت نفس المفتاح للسيرفر الداخلي
-ansible_ssh_common_args='-o ProxyCommand="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p -q ubuntu@${module.compute.bastion_public_ip}" -o StrictHostKeyChecking=no'
-rds_endpoint=${module.database.rds_endpoint}
-redis_endpoint=${module.database.redis_endpoint}
+# ForwardAgent=yes دي هي السر اللي بيخلي الـ Bastion يكلم الـ App EC2 بالمفتاح اللي معاك
+ansible_ssh_common_args='-o ProxyJump=ubuntu@${module.compute.bastion_public_ip} -o ForwardAgent=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 EOF
 }
