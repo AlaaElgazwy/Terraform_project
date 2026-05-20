@@ -1,4 +1,6 @@
-
+data "aws_availability_zones" "available" {
+  state = "available"
+}
 resource "aws_vpc" "main_vpc" {
   cidr_block           = var.vpc_cidr
  
@@ -19,7 +21,7 @@ resource "aws_internet_gateway" "gw" {
 resource "aws_subnet" "public_subnet_a" {
   vpc_id     = aws_vpc.main_vpc.id
   cidr_block = cidrsubnet(var.vpc_cidr, 8, 1)
-  availability_zone       = "us-east-1a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   map_public_ip_on_launch = true
 
   tags = {
@@ -30,7 +32,7 @@ resource "aws_subnet" "public_subnet_a" {
 resource "aws_subnet" "public_subnet_b" {
   vpc_id     = aws_vpc.main_vpc.id
   cidr_block = cidrsubnet(var.vpc_cidr, 8, 2)
-  availability_zone       = "us-east-1b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   map_public_ip_on_launch = true
 
   tags = {
@@ -41,7 +43,7 @@ resource "aws_subnet" "public_subnet_b" {
 resource "aws_subnet" "private_subnet_a" {
   vpc_id     = aws_vpc.main_vpc.id
   cidr_block = cidrsubnet(var.vpc_cidr, 8, 3)
-  availability_zone       = "us-east-1a"
+  availability_zone = data.aws_availability_zones.available.names[0]
   
 
   tags = {
@@ -52,7 +54,7 @@ resource "aws_subnet" "private_subnet_a" {
 resource "aws_subnet" "private_subnet_b" {
   vpc_id     = aws_vpc.main_vpc.id
   cidr_block = cidrsubnet(var.vpc_cidr, 8, 4)
-  availability_zone       = "us-east-1b"
+  availability_zone = data.aws_availability_zones.available.names[1]
   
 
   tags = {
