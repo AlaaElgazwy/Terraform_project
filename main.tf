@@ -39,7 +39,7 @@ ${module.compute.application_private_ip}
 [app_servers:vars]
 ansible_user=ubuntu
 # الأسطر دي بتخلي Ansible "ينط" للـ App Server عن طريق الـ Bastion
-ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q ubuntu@${module.compute.bastion_public_ip} -o StrictHostKeyChecking=no" -o StrictHostKeyChecking=no'
+ansible_ssh_common_args='-o ProxyCommand="ssh -W %h:%p -q ubuntu@${module.compute.bastion_public_ip} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
 rds_endpoint=${module.database.rds_endpoint}
 redis_endpoint=${module.database.redis_endpoint}
 EOF
