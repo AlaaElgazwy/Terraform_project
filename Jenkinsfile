@@ -45,17 +45,23 @@ pipeline {
         }
 
         stage('Deploy Application') {
-        when { expression { params.ACTION == 'apply' } }
-        steps {
+    when { expression { params.ACTION == 'apply' } }
+    steps {
+        sshagent(['my-aws-key']) {
+            sh """
+            # 1. اختبار الاتصال بال Bastion
+            ssh -o StrictHostKeyChecking=no ubuntu@3.123.6.32 "echo 'Bastion OK'"
             
-            sshagent(['my-aws-key']) {
-                sh """
-                ssh -o StrictHostKeyChecking=no -o ProxyJump=ubuntu@3.123.6.32 ubuntu@10.1.3.155 "echo 'Connection Test Success'"
-                ansible-playbook -i inventory.ini deploy_app.yml
+            # 2. اختبار الاتصال بال App EC2 من خلال ال Bastion
+            ssh -o StrictHostKeyChecking=no -o ProxyJump=ubuntu@3.123.6.32 ubuntu@10.1.3.155 "echo 'App EC2 OK'"
+            
+            # 3. تشغيل Ansible
+            ansible-playbook -i inventory.ini deploy_app.yml
             """
         }
-            }
-        }
     }
-    
-  }
+}
+
+}
+
+}
