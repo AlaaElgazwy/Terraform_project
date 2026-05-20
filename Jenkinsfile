@@ -48,13 +48,10 @@ stage('Deploy Application') {
     when { expression { params.ACTION == 'apply' } }
     steps {
         sshagent(['my-aws-key']) {
-      sh """
-            # 1. فتح نفق SSH في الخلفية للـ App Server
-            ssh -f -N -o StrictHostKeyChecking=no -o ProxyJump=ubuntu@${module.compute.bastion_public_ip} -L 2222:${module.compute.application_private_ip}:22 ubuntu@${module.compute.bastion_public_ip}
-            
-            # 2. الآن Ansible سيتصل بالـ Localhost على بورت 2222
-            # هذا البورت هو "باب" ينقل البيانات مباشرة للـ App Server
-            ansible-playbook -i localhost, -e "ansible_ssh_host=127.0.0.1 ansible_ssh_port=2222 ansible_user=ubuntu" deploy_app.yml -vvvv
+            sh """
+            echo "Starting Ansible Deployment..."
+            # هنا مش بنبعت أي متغيرات، Ansible بيقرأ inventory.ini اللي Terraform كتبه
+            ansible-playbook -i inventory.ini deploy_app.yml -vvvv
             """
         }
     }
