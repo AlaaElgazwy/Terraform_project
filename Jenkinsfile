@@ -49,10 +49,13 @@ pipeline {
         steps {
             
             sshagent(['my-aws-key']) {
-                sh "ansible-playbook -i inventory.ini deploy_app.yml"
+                sh """
+                ssh -o StrictHostKeyChecking=no -o ProxyJump=ubuntu@3.123.6.32 ubuntu@10.1.3.155 "echo 'Connection Test Success'"
+                ansible-playbook -i inventory.ini deploy_app.yml
+            """
+        }
             }
         }
     }
     
-    }
-}
+  }
