@@ -45,11 +45,19 @@ pipeline {
         }
 
         stage('Deploy Application') {
-    when { expression { params.ACTION == 'apply' } }
-    steps {
-        sshagent(['my-aws-key']) {
+           when { expression { params.ACTION == 'apply' } }
+           steps {
+          sshagent(['my-aws-key']) {
+            sh """
+            echo "--- Testing Bastion Connection ---"
+            ssh -vvv -o StrictHostKeyChecking=no ubuntu@${module.compute.bastion_public_ip} "echo Bastion Reachable"
             
-            sh "ansible-playbook -i inventory.ini deploy_app.yml"
+            echo "--- Testing App EC2 Connection ---"
+            ssh -vvv -o StrictHostKeyChecking=no -o ProxyCommand="ssh -W %h:%p -q ubuntu@${module.compute.bastion_public_ip} -o StrictHostKeyChecking=no" ubuntu@${module.compute.application_private_ip} "echo App EC2 Reachable"
+            
+            echo "--- Running Ansible ---"
+            ansible-playbook -i inventory.ini deploy_app.yml -vvv
+            """
         }
     }
 }
