@@ -1,37 +1,42 @@
----
 - name: Deploy Node.js App on Private EC2
   hosts: app_servers
   become: yes
+  strategy: linear
+  serial: 1
   tasks:
     - name: Update apt cache
       apt:
         update_cache: yes
 
-    - name: Add NodeSource repository for newer Node.js
-      shell: curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-    
-
-    - name: Install Node.js, npm, and git
+    - name: Install dependencies for NodeSource
       apt:
         name:
-          - nodejs
-          - npm
-          - git
+          - curl
+          - gnupg
+          - apt-transport-https
         state: present
 
-    - name: Remove old node_modules
-      file:
-        path: /var/www/node-app/node_modules
-        state: absent
-      register: remove_modules
-      until: remove_modules is succeeded
-      retries: 5
-      delay: 10   
+    - name: Add NodeSource repository for Node.js 18
+      shell: |
+        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 
-    - name: Install PM2 globally (Process Manager to keep app running)
-      npm:
-        name: pm2
-        global: yes
+    - name: Install Node.js (which includes npm)
+      apt:
+        name: nodejs
+        state: present
+        update_cache: yes
+
+    - name: Verify Node.js version
+      command: node -v
+      register: node_version
+      
+    - debug:
+        msg: "Node.js version is {{ node_version.stdout }}"
+
+    - name: Install git
+      apt:
+        name: git
+        state: present
 
     - name: Ensure app directory exists
       file:
@@ -47,9 +52,28 @@
         version: main
         force: yes
 
+    - name: Clean npm cache
+      command: npm cache clean --force
+      args:
+        chdir: /var/www/node-app
+
+    - name: Remove old node_modules and package-lock.json
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /var/www/node-app/node_modules
+        - /var/www/node-app/package-lock.json
+
     - name: Install application dependencies
       npm:
         path: /var/www/node-app
+        state: present
+
+    - name: Install PM2 globally
+      npm:
+        name: pm2
+        global: yes
 
     - name: Stop existing PM2 process if running
       command: pm2 stop backend-app
@@ -59,7 +83,9 @@
 
     - name: Start the application with PM2
       shell: >
-        DB_HOST={{ rds_endpoint }} REDIS_HOST={{ redis_endpoint }} PORT=3000 
+        DB_HOST={{ rds_endpoint }} 
+        REDIS_HOST={{ redis_endpoint }} 
+        PORT=3000 
         pm2 start index.js --name backend-app --update-env
       args:
         chdir: /var/www/node-app
