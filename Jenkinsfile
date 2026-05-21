@@ -47,23 +47,21 @@ pipeline {
 stage('Deploy Application') {
             when { expression { params.ACTION == 'apply' } }
             steps {
-                sshagent(['my-aws-key']) {
+                
+                withCredentials([sshUserPrivateKey(credentialsId: 'my-aws-key', keyFileVariable: 'KEY_FILE')]) {
                     sh '''
                     echo "Waiting 60 seconds for EC2 instances to fully boot..."
                     sleep 60
                     
-                    
+                    # استخراج الـ IP بتاع الـ Bastion
                     BASTION_IP=$(terraform output -raw bastion_public_ip)
-                    
-                   
-                    KEY_PATH=$(find /var/jenkins_home/workspace/Terraform-Infra@tmp -name "private_key_*.key" | head -n 1)
                     
                     echo "Starting Ansible Deployment using exact Key File..."
                     
-                    
+                    # تمرير المفتاح صراحة للـ App وللـ Bastion
                     ansible-playbook -i inventory.ini deploy_app.yml \
-                        --private-key "$KEY_PATH" \
-                        --ssh-common-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -i $KEY_PATH -W %h:%p -q ubuntu@$BASTION_IP -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\"" \
+                        --private-key "$KEY_FILE" \
+                        --ssh-common-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -i $KEY_FILE -W %h:%p -q ubuntu@$BASTION_IP -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\"" \
                         -vvvv
                     '''
                 }
