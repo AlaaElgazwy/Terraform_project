@@ -49,8 +49,10 @@ stage('Deploy Application') {
     steps {
         sshagent(['my-aws-key']) {
             sh """
+            echo "Waiting 60 seconds for EC2 instances to fully boot and start SSH..."
+            sleep 60
+            
             echo "Starting Ansible Deployment..."
-         
             ansible-playbook -i inventory.ini deploy_app.yml -vvvv
             """
         }
