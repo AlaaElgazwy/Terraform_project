@@ -7,6 +7,10 @@
       apt:
         update_cache: yes
 
+    - name: Add NodeSource repository for newer Node.js
+      shell: curl -sL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+    
+
     - name: Install Node.js, npm, and git
       apt:
         name:
@@ -14,6 +18,11 @@
           - npm
           - git
         state: present
+
+    - name: Remove old node_modules
+      file:
+        path: /var/www/node-app/node_modules
+        state: absent    
 
     - name: Install PM2 globally (Process Manager to keep app running)
       npm:
