@@ -8,6 +8,14 @@
       apt:
         update_cache: yes
 
+    - name: Remove any existing old nodejs packages
+      apt:
+        name: 
+          - nodejs
+          - npm
+        state: absent
+        purge: yes
+
     - name: Install dependencies for NodeSource
       apt:
         name:
@@ -20,7 +28,7 @@
       shell: |
         curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
 
-    - name: Install Node.js (which includes npm)
+    - name: Install Node.js 18
       apt:
         name: nodejs
         state: present
@@ -52,18 +60,10 @@
         version: main
         force: yes
 
-    - name: Clean npm cache
-      command: npm cache clean --force
-      args:
-        chdir: /var/www/node-app
-
-    - name: Remove old node_modules and package-lock.json
+    - name: Remove old node_modules to avoid version conflicts
       file:
-        path: "{{ item }}"
+        path: /var/www/node-app/node_modules
         state: absent
-      loop:
-        - /var/www/node-app/node_modules
-        - /var/www/node-app/package-lock.json
 
     - name: Install application dependencies
       npm:

@@ -74,7 +74,7 @@ EOF
                     echo "Starting Ansible Deployment using isolated SSH config..."
                     export ANSIBLE_SSH_ARGS="-F ssh_config"
                     
-                    ansible-playbook -i inventory.ini deploy_app.yml -vvvv
+                    ansible-playbook -i inventory.ini deploy_app.yml -vvvv -T 60
                     '''
                 }
             }
