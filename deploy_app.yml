@@ -8,13 +8,15 @@
       apt:
         update_cache: yes
 
-    - name: Remove any existing old nodejs packages
-      apt:
-        name: 
-          - nodejs
-          - npm
-        state: absent
-        purge: yes
+    - name: Purge existing nodejs and libnode-dev to prevent conflicts
+      shell: |
+        sudo apt-get purge -y nodejs npm nodejs-doc libnode-dev || true
+        sudo apt-get autoremove -y
+        sudo rm -rf /usr/lib/node_modules
+        sudo rm -rf /usr/bin/node
+        sudo rm -rf /usr/bin/npm
+        sudo rm -rf /usr/include/node
+      become: yes
 
     - name: Install dependencies for NodeSource
       apt:
@@ -60,10 +62,18 @@
         version: main
         force: yes
 
-    - name: Remove old node_modules to avoid version conflicts
+    - name: Clean npm cache
+      command: npm cache clean --force
+      args:
+        chdir: /var/www/node-app
+
+    - name: Remove old node_modules and package-lock.json
       file:
-        path: /var/www/node-app/node_modules
+        path: "{{ item }}"
         state: absent
+      loop:
+        - /var/www/node-app/node_modules
+        - /var/www/node-app/package-lock.json
 
     - name: Install application dependencies
       npm:
