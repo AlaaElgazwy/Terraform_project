@@ -47,7 +47,6 @@ pipeline {
 stage('Deploy Application') {
             when { expression { params.ACTION == 'apply' } }
             steps {
-                
                 withCredentials([sshUserPrivateKey(credentialsId: 'my-aws-key', keyFileVariable: 'KEY_FILE')]) {
                     sh '''
                     echo "Waiting 60 seconds for EC2 instances to fully boot..."
@@ -56,13 +55,31 @@ stage('Deploy Application') {
                     # استخراج الـ IP بتاع الـ Bastion
                     BASTION_IP=$(terraform output -raw bastion_public_ip)
                     
-                    echo "Starting Ansible Deployment using exact Key File..."
+                    echo "Creating custom SSH config to bypass all shell escaping issues..."
+                    # إنشاء ملف إعدادات SSH مخصص
+                    cat <<EOF > ssh_config
+                    Host bastion
+                        HostName $BASTION_IP
+                        User ubuntu
+                        IdentityFile $KEY_FILE
+                        StrictHostKeyChecking no
+                        UserKnownHostsFile /dev/null
+
+                    Host 10.1.*
+                        User ubuntu
+                        IdentityFile $KEY_FILE
+                        ProxyCommand ssh -F ssh_config bastion -W %h:%p
+                        StrictHostKeyChecking no
+                        UserKnownHostsFile /dev/null
+                    EOF
+
+                    echo "Starting Ansible Deployment using isolated SSH config..."
                     
-                    # تمرير المفتاح صراحة للـ App وللـ Bastion
-                    ansible-playbook -i inventory.ini deploy_app.yml \
-                        --private-key "$KEY_FILE" \
-                        --ssh-common-args="-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ProxyCommand=\"ssh -i $KEY_FILE -W %h:%p -q ubuntu@$BASTION_IP -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null\"" \
-                        -vvvv
+                    # إجبار Ansible على استخدام ملف الـ SSH اللي لسه عاملينه
+                    export ANSIBLE_SSH_ARGS="-F ssh_config"
+                    
+                    # أمر Ansible بقى بسيط ونظيف جداً
+                    ansible-playbook -i inventory.ini deploy_app.yml -vvvv
                     '''
                 }
             }
