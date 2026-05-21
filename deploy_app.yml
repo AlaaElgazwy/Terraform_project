@@ -22,7 +22,11 @@
     - name: Remove old node_modules
       file:
         path: /var/www/node-app/node_modules
-        state: absent    
+        state: absent
+      register: remove_modules
+      until: remove_modules is succeeded
+      retries: 5
+      delay: 10   
 
     - name: Install PM2 globally (Process Manager to keep app running)
       npm:
