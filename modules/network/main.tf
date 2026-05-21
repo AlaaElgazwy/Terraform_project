@@ -106,3 +106,22 @@ resource "aws_route_table_association" "private_assoc_b" {
   subnet_id      = aws_subnet.private_subnet_b.id
   route_table_id = aws_route_table.private_rt.id
 }
+# 1. تخصيص IP ثابت للـ NAT Gateway
+resource "aws_eip" "nat_eip" {
+  domain = "vpc"
+}
+
+# 2. إنشاء الـ NAT Gateway في الـ Public Subnet (استخدمت Subnet A)
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public_subnet_a.id 
+
+  depends_on = [aws_internet_gateway.gw]
+}
+
+# 3. تعديل الـ Private Route Table عشان يبعت الترافيك للـ NAT
+resource "aws_route" "private_nat_route" {
+  route_table_id         = aws_route_table.private_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat_gw.id
+}
