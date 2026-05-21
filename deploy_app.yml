@@ -45,10 +45,8 @@
         chdir: /var/www/node-app
 
     - name: Start the application with PM2
-      command: pm2 start index.js --name "backend-app"
+      shell: >
+        DB_HOST={{ rds_endpoint }} REDIS_HOST={{ redis_endpoint }} PORT=3000 
+        pm2 start index.js --name backend-app --update-env
       args:
         chdir: /var/www/node-app
-      environment:
-        DB_HOST: "{{ rds_endpoint }}"
-        REDIS_HOST: "{{ redis_endpoint }}"
-        PORT: "3000"
