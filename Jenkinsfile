@@ -50,7 +50,7 @@ stage('Deploy Application') {
         sshagent(['my-aws-key']) {
             sh """
             echo "Starting Ansible Deployment..."
-            # هنا مش بنبعت أي متغيرات، Ansible بيقرأ inventory.ini اللي Terraform كتبه
+         
             ansible-playbook -i inventory.ini deploy_app.yml -vvvv
             """
         }

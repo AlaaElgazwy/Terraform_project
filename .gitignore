@@ -8,3 +8,4 @@ crash.*.log
 my-aws-key
 my-aws-key.pub
 inventory.ini
+my-aws-key(1).pem
