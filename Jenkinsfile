@@ -52,11 +52,9 @@ stage('Deploy Application') {
                     echo "Waiting 60 seconds for EC2 instances to fully boot..."
                     sleep 60
                     
-                    # استخراج الـ IP بتاع الـ Bastion
                     BASTION_IP=$(terraform output -raw bastion_public_ip)
                     
-                    echo "Creating custom SSH config to bypass all shell escaping issues..."
-                    # إنشاء ملف إعدادات SSH مخصص
+                    echo "Creating custom SSH config..."
                     cat <<EOF > ssh_config
                     Host bastion
                         HostName $BASTION_IP
@@ -71,14 +69,11 @@ stage('Deploy Application') {
                         ProxyCommand ssh -F ssh_config bastion -W %h:%p
                         StrictHostKeyChecking no
                         UserKnownHostsFile /dev/null
-                    EOF
+EOF
 
                     echo "Starting Ansible Deployment using isolated SSH config..."
-                    
-                    # إجبار Ansible على استخدام ملف الـ SSH اللي لسه عاملينه
                     export ANSIBLE_SSH_ARGS="-F ssh_config"
                     
-                    # أمر Ansible بقى بسيط ونظيف جداً
                     ansible-playbook -i inventory.ini deploy_app.yml -vvvv
                     '''
                 }
